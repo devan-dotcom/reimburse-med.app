@@ -9,10 +9,13 @@ import {
   LogOut,
   Eye,
   Upload,
+  Search,
+  KeyRound,
 } from 'lucide-react'
 
 import {
   useEffect,
+  useMemo,
   useState,
 } from 'react'
 
@@ -36,7 +39,8 @@ import {
 
 import {
   getUser,
-  logout
+  logout,
+  saveUser,
 } from '@/lib/auth'
 
 import {
@@ -78,6 +82,38 @@ export default function FinanceDashboard() {
     setCompletedPayment] =
     useState(0)
 
+  /* =====================
+     FILTER
+  ===================== */
+
+  const [search,
+    setSearch] =
+    useState('')
+
+  const [statusFilter,
+    setStatusFilter] =
+    useState('all')
+
+  const [monthFilter,
+    setMonthFilter] =
+    useState('all')
+
+  /* =====================
+     CHANGE PASSWORD
+  ===================== */
+
+  const [showPasswordModal,
+    setShowPasswordModal] =
+    useState(false)
+
+  const [newPassword,
+    setNewPassword] =
+    useState('')
+
+  const [confirmPassword,
+    setConfirmPassword] =
+    useState('')
+
   async function fetchData() {
 
     const {
@@ -111,7 +147,8 @@ export default function FinanceDashboard() {
     const pending =
       data.filter(
         (item) =>
-          item.status === 'pending_finance'
+          item.status ===
+          'pending_finance'
       )
 
     setPendingFinance(
@@ -121,7 +158,8 @@ export default function FinanceDashboard() {
     const approved =
       data.filter(
         (item) =>
-          item.status === 'approved'
+          item.status ===
+          'approved'
       )
 
     setCompletedPayment(
@@ -149,8 +187,29 @@ export default function FinanceDashboard() {
 
     try {
 
+      const reimbursement =
+        reimbursements.find(
+          (item) =>
+            item.id === id
+        )
+
+      if (!reimbursement) {
+
+        toast.error(
+          'Data reimbursement tidak ditemukan'
+        )
+
+        return
+      }
+
+      /* =====================
+         FILE NAME
+      ===================== */
+
       const fileExt =
-        file.name.split('.').pop()
+        file.name
+          .split('.')
+          .pop()
 
       const fileName =
         `${uuidv4()}.${fileExt}`
@@ -161,13 +220,21 @@ export default function FinanceDashboard() {
 
       const {
         error: uploadError
-      } = await supabase.storage
-        .from('payment-proof')
-        .upload(fileName, file)
+      } = await supabase
+        .storage
+        .from(
+          'payment-proof'
+        )
+        .upload(
+          fileName,
+          file
+        )
 
       if (uploadError) {
 
-        console.error(uploadError)
+        console.error(
+          uploadError
+        )
 
         toast.error(
           'Gagal upload bukti transfer'
@@ -182,37 +249,54 @@ export default function FinanceDashboard() {
 
       const {
         data: publicUrlData
-      } = supabase.storage
-        .from('payment-proof')
-        .getPublicUrl(fileName)
+      } = supabase
+        .storage
+        .from(
+          'payment-proof'
+        )
+        .getPublicUrl(
+          fileName
+        )
 
       const fileUrl =
-        publicUrlData.publicUrl
+        publicUrlData
+          .publicUrl
 
       /* =====================
-         UPDATE DATABASE
+         UPDATE REIMBURSEMENT
       ===================== */
 
-      const { error } =
-        await supabase
-          .from('reimbursements')
-          .update({
+      const {
+        error:
+          reimbursementError
+      } = await supabase
+        .from(
+          'reimbursements'
+        )
+        .update({
 
-            status:
-              'approved',
+          status:
+            'approved',
 
-            approved_by_finance:
-              user.nama,
+          approved_by_finance:
+            user.nama,
 
-            bukti_bayar:
-              fileUrl,
+          bukti_bayar:
+            fileUrl,
 
-          })
-          .eq('id', id)
+        })
+        .eq(
+          'id',
+          id
+        )
 
-      if (error) {
+      if (
+        reimbursementError
+      ) {
 
-        console.error(error)
+        console.error(
+          reimbursementError
+        )
 
         toast.error(
           'Gagal approve reimbursement'
@@ -222,10 +306,117 @@ export default function FinanceDashboard() {
       }
 
       toast.success(
-        'Payment approved'
+        'Payment approved successfully'
       )
 
       fetchData()
+
+    } catch (error) {
+
+      console.error(error)
+
+      toast.error(
+        'Terjadi kesalahan'
+      )
+    }
+  }
+
+  /* =====================
+     CHANGE PASSWORD
+  ===================== */
+
+  async function handleChangePassword() {
+
+    if (
+      !newPassword ||
+      !confirmPassword
+    ) {
+
+      toast.error(
+        'Semua field wajib diisi'
+      )
+
+      return
+    }
+
+    if (
+      newPassword !==
+      confirmPassword
+    ) {
+
+      toast.error(
+        'Password tidak sama'
+      )
+
+      return
+    }
+
+    if (
+      newPassword.length < 6
+    ) {
+
+      toast.error(
+        'Password minimal 6 karakter'
+      )
+
+      return
+    }
+
+    try {
+
+      const {
+        error
+      } = await supabase
+        .from('users')
+        .update({
+
+          password:
+            newPassword
+
+        })
+        .eq(
+          'id',
+          user.id
+        )
+
+      if (error) {
+
+        console.error(error)
+
+        toast.error(
+          'Gagal mengganti password'
+        )
+
+        return
+      }
+
+      const updatedUser = {
+
+        ...user,
+
+        password:
+          newPassword
+
+      }
+
+      saveUser(
+        updatedUser
+      )
+
+      setUser(
+        updatedUser
+      )
+
+      toast.success(
+        'Password berhasil diganti'
+      )
+
+      setShowPasswordModal(
+        false
+      )
+
+      setNewPassword('')
+      setConfirmPassword('')
 
     } catch (error) {
 
@@ -263,6 +454,80 @@ export default function FinanceDashboard() {
     fetchData()
 
   }, [router])
+
+  /* =====================
+     FILTERED DATA
+  ===================== */
+
+  const filteredData =
+    useMemo(() => {
+
+      return reimbursements.filter(
+        (item) => {
+
+          /* SEARCH */
+
+          const matchesSearch =
+
+            item.nama
+              ?.toLowerCase()
+              .includes(
+                search.toLowerCase()
+              ) ||
+
+            item.jenis_claim
+              ?.toLowerCase()
+              .includes(
+                search.toLowerCase()
+              )
+
+          /* STATUS */
+
+          const matchesStatus =
+
+            statusFilter ===
+              'all' ||
+
+            item.status ===
+              statusFilter
+
+          /* MONTH */
+
+          const itemMonth =
+            format(
+              new Date(
+                item.created_at
+              ),
+              'MMMM'
+            )
+
+          const matchesMonth =
+
+            monthFilter ===
+              'all' ||
+
+            itemMonth ===
+              monthFilter
+
+          return (
+            matchesSearch &&
+            matchesStatus &&
+            matchesMonth
+          )
+        }
+      )
+
+    }, [
+
+      reimbursements,
+
+      search,
+
+      statusFilter,
+
+      monthFilter,
+
+    ])
 
   if (!user || loading) {
 
@@ -328,6 +593,21 @@ export default function FinanceDashboard() {
 
           </div>
 
+          {/* CHANGE PASSWORD */}
+          <button
+            onClick={() =>
+              setShowPasswordModal(
+                true
+              )
+            }
+            className="w-12 h-12 rounded-2xl bg-blue-50 hover:bg-blue-100 transition-all flex items-center justify-center text-blue-600"
+          >
+
+            <KeyRound size={20} />
+
+          </button>
+
+          {/* LOGOUT */}
           <button
             onClick={logout}
             className="w-12 h-12 rounded-2xl bg-red-50 hover:bg-red-100 transition-all flex items-center justify-center text-red-500"
@@ -360,7 +640,7 @@ export default function FinanceDashboard() {
         {/* CARDS */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-          {/* CARD */}
+          {/* TOTAL */}
           <div className="bg-white rounded-3xl p-7 shadow-sm border border-slate-200">
 
             <div className="w-16 h-16 rounded-2xl bg-blue-100 flex items-center justify-center mb-6">
@@ -382,7 +662,7 @@ export default function FinanceDashboard() {
 
           </div>
 
-          {/* CARD */}
+          {/* PENDING */}
           <div className="bg-white rounded-3xl p-7 shadow-sm border border-slate-200">
 
             <div className="w-16 h-16 rounded-2xl bg-amber-100 flex items-center justify-center mb-6">
@@ -404,7 +684,7 @@ export default function FinanceDashboard() {
 
           </div>
 
-          {/* CARD */}
+          {/* COMPLETED */}
           <div className="bg-white rounded-3xl p-7 shadow-sm border border-slate-200">
 
             <div className="w-16 h-16 rounded-2xl bg-emerald-100 flex items-center justify-center mb-6">
@@ -425,6 +705,123 @@ export default function FinanceDashboard() {
             </h3>
 
           </div>
+
+        </div>
+
+        {/* FILTER */}
+        <div className="mt-8 flex flex-col lg:flex-row gap-4">
+
+          {/* SEARCH */}
+          <div className="flex items-center gap-3 bg-white border border-slate-200 rounded-2xl px-5 py-4 shadow-sm flex-1">
+
+            <Search
+              size={20}
+              className="text-slate-400"
+            />
+
+            <input
+              type="text"
+              placeholder="Search reimbursement..."
+              value={search}
+              onChange={(e) =>
+                setSearch(
+                  e.target.value
+                )
+              }
+              className="outline-none bg-transparent text-slate-700 w-full"
+            />
+
+          </div>
+
+          {/* STATUS */}
+          <select
+            value={statusFilter}
+            onChange={(e) =>
+              setStatusFilter(
+                e.target.value
+              )
+            }
+            className="bg-white border border-slate-200 rounded-2xl px-5 py-4 shadow-sm text-slate-700"
+          >
+
+            <option value="all">
+              All Status
+            </option>
+
+            <option value="pending_finance">
+              Pending Finance
+            </option>
+
+            <option value="approved">
+              Approved
+            </option>
+
+          </select>
+
+          {/* MONTH */}
+          <select
+            value={monthFilter}
+            onChange={(e) =>
+              setMonthFilter(
+                e.target.value
+              )
+            }
+            className="bg-white border border-slate-200 rounded-2xl px-5 py-4 shadow-sm text-slate-700"
+          >
+
+            <option value="all">
+              All Month
+            </option>
+
+            <option value="January">
+              January
+            </option>
+
+            <option value="February">
+              February
+            </option>
+
+            <option value="March">
+              March
+            </option>
+
+            <option value="April">
+              April
+            </option>
+
+            <option value="May">
+              May
+            </option>
+
+            <option value="June">
+              June
+            </option>
+
+            <option value="July">
+              July
+            </option>
+
+            <option value="August">
+              August
+            </option>
+
+            <option value="September">
+              September
+            </option>
+
+            <option value="October">
+              October
+            </option>
+
+            <option value="November">
+              November
+            </option>
+
+            <option value="December">
+              December
+            </option>
+
+          </select>
 
         </div>
 
@@ -484,7 +881,26 @@ export default function FinanceDashboard() {
               <tbody>
 
                 {
-                  reimbursements.map(
+                  filteredData.length === 0 && (
+
+                    <tr>
+
+                      <td
+                        colSpan={7}
+                        className="px-8 py-10 text-center text-slate-500"
+                      >
+
+                        No reimbursement data found
+
+                      </td>
+
+                    </tr>
+
+                  )
+                }
+
+                {
+                  filteredData.map(
                     (item) => (
 
                       <tr
@@ -493,15 +909,11 @@ export default function FinanceDashboard() {
                       >
 
                         <td className="px-8 py-6 text-slate-800 font-medium">
-
                           {item.nama}
-
                         </td>
 
                         <td className="px-8 py-6 text-slate-700">
-
                           {item.jenis_claim}
-
                         </td>
 
                         <td className="px-8 py-6 text-slate-500">
@@ -584,9 +996,12 @@ export default function FinanceDashboard() {
                                         ) {
 
                                           setPaymentFiles({
+
                                             ...paymentFiles,
+
                                             [item.id]:
                                               e.target.files[0]
+
                                           })
                                         }
 
@@ -661,6 +1076,100 @@ export default function FinanceDashboard() {
         </div>
 
       </main>
+
+      {/* PASSWORD MODAL */}
+      {
+        showPasswordModal && (
+
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-5">
+
+            <div className="w-full max-w-md bg-white rounded-3xl p-8 shadow-2xl">
+
+              <h2 className="text-2xl font-bold text-slate-900 mb-6">
+                Change Password
+              </h2>
+
+              <div className="space-y-5">
+
+                {/* NEW PASSWORD */}
+                <div>
+
+                  <label className="text-slate-700 font-medium">
+                    New Password
+                  </label>
+
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) =>
+                      setNewPassword(
+                        e.target.value
+                      )
+                    }
+                    className="mt-2 w-full rounded-2xl border border-slate-200 px-5 py-4 outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter new password"
+                  />
+
+                </div>
+
+                {/* CONFIRM */}
+                <div>
+
+                  <label className="text-slate-700 font-medium">
+                    Confirm Password
+                  </label>
+
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) =>
+                      setConfirmPassword(
+                        e.target.value
+                      )
+                    }
+                    className="mt-2 w-full rounded-2xl border border-slate-200 px-5 py-4 outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Confirm password"
+                  />
+
+                </div>
+
+                {/* BUTTON */}
+                <div className="flex gap-3 pt-3">
+
+                  <button
+                    onClick={() =>
+                      setShowPasswordModal(
+                        false
+                      )
+                    }
+                    className="flex-1 py-4 rounded-2xl bg-slate-100 hover:bg-slate-200 transition-all font-semibold text-slate-700"
+                  >
+
+                    Cancel
+
+                  </button>
+
+                  <button
+                    onClick={
+                      handleChangePassword
+                    }
+                    className="flex-1 py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 transition-all font-semibold text-white"
+                  >
+
+                    Save Password
+
+                  </button>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        )
+      }
 
     </div>
   )

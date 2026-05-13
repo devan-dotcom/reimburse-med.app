@@ -13,60 +13,40 @@ import {
 } from 'lucide-react'
 
 import {
-  useEffect,
   useState,
 } from 'react'
 
-import { useRouter }
-from 'next/navigation'
-
-import toast
-from 'react-hot-toast'
+import {
+  useRouter,
+} from 'next/navigation'
 
 import {
-  supabase
+  supabase,
 } from '@/lib/supabase'
-
-import {
-  saveUser
-} from '@/lib/auth'
 
 export default function LoginPage() {
 
   const router = useRouter()
 
-  const [email, setEmail] =
+  const [email,
+    setEmail] =
     useState('')
 
-  const [password, setPassword] =
+  const [password,
+    setPassword] =
     useState('')
-
-  const [loading, setLoading] =
-    useState(false)
-
-  const [rememberMe,
-    setRememberMe] =
-    useState(false)
 
   const [showPassword,
     setShowPassword] =
     useState(false)
 
-  useEffect(() => {
+  const [loading,
+    setLoading] =
+    useState(false)
 
-    const savedEmail =
-      localStorage.getItem(
-        'remember_email'
-      )
-
-    if (savedEmail) {
-
-      setEmail(savedEmail)
-
-      setRememberMe(true)
-    }
-
-  }, [])
+  const [errorMessage,
+    setErrorMessage] =
+    useState('')
 
   async function handleLogin(
     e: React.FormEvent
@@ -74,129 +54,87 @@ export default function LoginPage() {
 
     e.preventDefault()
 
-    if (!email || !password) {
-
-      toast.error(
-        'Email dan password wajib diisi'
-      )
-
-      return
-    }
-
     setLoading(true)
 
-    try {
+    setErrorMessage('')
 
-      const {
-        data,
-        error
-      } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', email)
-        .eq('password', password)
-        .single()
+    /* =========================
+       CHECK USER
+    ========================= */
 
-      if (error || !data) {
+    const {
+      data,
+      error,
+    } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .eq('password', password)
+      .single()
 
-        toast.error(
-          'Email atau password salah'
-        )
+    if (
+      error ||
+      !data
+    ) {
 
-        setLoading(false)
-
-        return
-      }
-
-      /* =====================
-         SAVE USER SESSION
-      ===================== */
-
-      saveUser(data)
-
-      /* =====================
-         REMEMBER EMAIL
-      ===================== */
-
-      if (rememberMe) {
-
-        localStorage.setItem(
-          'remember_email',
-          email
-        )
-
-      } else {
-
-        localStorage.removeItem(
-          'remember_email'
-        )
-      }
-
-      toast.success(
-        'Login berhasil'
+      setErrorMessage(
+        'Email atau password salah'
       )
-
-      /* =====================
-         REDIRECT ROLE
-      ===================== */
-
-      setTimeout(() => {
-
-        if (
-          data.role === 'employee'
-        ) {
-
-          router.push(
-            '/employee'
-          )
-        }
-
-        else if (
-          data.role === 'hr'
-        ) {
-
-          router.push('/hr')
-        }
-
-        else if (
-          data.role === 'finance'
-        ) {
-
-          router.push(
-            '/finance'
-          )
-        }
-
-      }, 1000)
-
-    } catch (error) {
-
-      console.error(error)
-
-      toast.error(
-        'Terjadi kesalahan'
-      )
-
-    } finally {
 
       setLoading(false)
-    }
-  }
-
-  function handleForgotPassword() {
-
-    if (!email) {
-
-      toast.error(
-        'Masukkan email terlebih dahulu'
-      )
 
       return
     }
 
-    toast.success(
-      'Fitur reset password akan segera tersedia'
+    /* =========================
+       SAVE SESSION
+    ========================= */
+
+    localStorage.setItem(
+      'user',
+      JSON.stringify(data)
     )
+
+    /* =========================
+       REDIRECT ROLE
+    ========================= */
+
+    if (
+      data.role ===
+      'employee'
+    ) {
+
+      router.push(
+        '/employee'
+      )
+
+    } else if (
+      data.role ===
+      'hr'
+    ) {
+
+      router.push(
+        '/hr'
+      )
+
+    } else if (
+      data.role ===
+      'finance'
+    ) {
+
+      router.push(
+        '/finance'
+      )
+
+    } else {
+
+      setErrorMessage(
+        'Role tidak dikenali'
+      )
+
+    }
+
+    setLoading(false)
   }
 
   return (
@@ -205,7 +143,7 @@ export default function LoginPage() {
       {/* LEFT SIDE */}
       <div className="hidden lg:flex lg:w-1/2 relative bg-gradient-to-br from-slate-50 via-blue-50 to-cyan-50 p-16 flex-col justify-between overflow-hidden">
 
-        {/* BACKGROUND */}
+        {/* BG */}
         <div className="absolute top-0 left-0 w-72 h-72 bg-blue-100 rounded-full opacity-40 blur-3xl" />
 
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-cyan-100 rounded-full opacity-40 blur-3xl" />
@@ -263,13 +201,13 @@ export default function LoginPage() {
           {/* DESC */}
           <p className="mt-8 text-slate-600 text-xl leading-relaxed max-w-xl">
 
-            Internal healthcare reimbursement
-            platform for employees,
-            HR verification,
+            Internal healthcare reimbursement platform
+            for employees, HR verification,
             and finance approval management.
 
           </p>
 
+          {/* LINE */}
           <div className="w-24 h-1 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full mt-10" />
 
         </div>
@@ -294,9 +232,7 @@ export default function LoginPage() {
             </h3>
 
             <p className="text-slate-600 leading-relaxed">
-
-              Your reimbursement data is protected with enterprise-grade security.
-
+              Your reimbursement data is protected.
             </p>
 
           </div>
@@ -318,9 +254,7 @@ export default function LoginPage() {
             </h3>
 
             <p className="text-slate-600 leading-relaxed">
-
-              Built specifically for medical reimbursement workflow.
-
+              Built specifically for medical reimbursement.
             </p>
 
           </div>
@@ -342,9 +276,7 @@ export default function LoginPage() {
             </h3>
 
             <p className="text-slate-600 leading-relaxed">
-
-              Faster verification, approval, and reimbursement process.
-
+              Faster reimbursement workflow process.
             </p>
 
           </div>
@@ -353,12 +285,12 @@ export default function LoginPage() {
 
       </div>
 
-      {/* RIGHT SIDE */}
+      {/* RIGHT */}
       <div className="flex flex-1 items-center justify-center p-8 relative">
 
         <div className="absolute top-10 right-10 w-32 h-32 bg-slate-200 rounded-full opacity-30 blur-2xl" />
 
-        {/* LOGIN CARD */}
+        {/* CARD */}
         <div className="w-full max-w-xl bg-white rounded-[40px] shadow-2xl border border-slate-100 p-12 relative z-10">
 
           {/* LOGO */}
@@ -382,7 +314,8 @@ export default function LoginPage() {
 
             <p className="text-slate-500 text-center text-lg mt-5 leading-relaxed max-w-md">
 
-              Sign in to continue accessing your medical reimbursement portal
+              Sign in to continue accessing your
+              medical reimbursement portal
 
             </p>
 
@@ -410,14 +343,15 @@ export default function LoginPage() {
 
                 <input
                   type="email"
+                  placeholder="Enter your email"
                   value={email}
                   onChange={(e) =>
                     setEmail(
                       e.target.value
                     )
                   }
-                  placeholder="Enter your email"
                   className="w-full outline-none text-slate-700 placeholder:text-slate-400 bg-transparent"
+                  required
                 />
 
               </div>
@@ -444,14 +378,15 @@ export default function LoginPage() {
                       ? 'text'
                       : 'password'
                   }
+                  placeholder="Enter your password"
                   value={password}
                   onChange={(e) =>
                     setPassword(
                       e.target.value
                     )
                   }
-                  placeholder="Enter your password"
                   className="w-full outline-none text-slate-700 placeholder:text-slate-400 bg-transparent"
+                  required
                 />
 
                 <button
@@ -466,13 +401,13 @@ export default function LoginPage() {
                   {
                     showPassword
                       ? (
-                        <Eye
+                        <EyeOff
                           className="text-slate-400"
                           size={22}
                         />
                       )
                       : (
-                        <EyeOff
+                        <Eye
                           className="text-slate-400"
                           size={22}
                         />
@@ -485,50 +420,29 @@ export default function LoginPage() {
 
             </div>
 
-            {/* REMEMBER */}
-            <div className="flex items-center justify-between text-sm">
+            {/* ERROR */}
+            {
+              errorMessage && (
 
-              <label className="flex items-center gap-3 text-slate-600 cursor-pointer">
+                <div className="bg-red-50 border border-red-200 text-red-600 px-5 py-4 rounded-2xl">
 
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) =>
-                    setRememberMe(
-                      e.target.checked
-                    )
-                  }
-                  className="w-4 h-4 accent-blue-600"
-                />
+                  {errorMessage}
 
-                Remember me
+                </div>
 
-              </label>
-
-              <button
-                type="button"
-                onClick={
-                  handleForgotPassword
-                }
-                className="text-blue-600 hover:text-blue-700 font-medium"
-              >
-
-                Forgot password?
-
-              </button>
-
-            </div>
+              )
+            }
 
             {/* BUTTON */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-5 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 transition-all text-white font-bold text-xl shadow-xl disabled:opacity-70"
+              className="w-full py-5 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 transition-all text-white font-bold text-xl shadow-xl disabled:opacity-50"
             >
 
               {
                 loading
-                  ? 'Loading...'
+                  ? 'Signing In...'
                   : 'Sign In'
               }
 
