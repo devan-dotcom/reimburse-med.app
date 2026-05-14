@@ -3,6 +3,9 @@
 import Image from 'next/image'
 
 import {
+  Receipt,
+  Users,
+  LayoutDashboard,
   BadgeCheck,
   Clock3,
   Wallet,
@@ -50,6 +53,16 @@ import {
 import {
   getStatusColor
 } from '@/lib/status'
+import {
+  cardStyle,
+  cardPadding,
+  inputStyle,
+  selectStyle,
+  primaryButton,
+  tableHeader,
+  tableCell,
+  premiumSelect,
+} from '@/lib/ui'
 
 export default function FinanceDashboard() {
 
@@ -61,6 +74,9 @@ export default function FinanceDashboard() {
   const [loading,
     setLoading] =
     useState(true)
+  const [activeMenu,
+  setActiveMenu] =
+  useState('finance')
 
   const [reimbursements,
     setReimbursements] =
@@ -545,81 +561,226 @@ export default function FinanceDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100">
+  <div className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-slate-200 flex relative overflow-hidden">
+    {/* BACKGROUND BLUR */}
+<div className="absolute top-0 left-0 w-[500px] h-[500px] bg-cyan-300/20 rounded-full blur-3xl" />
 
+<div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-blue-300/20 rounded-full blur-3xl" />
+      
+      {/* SIDEBAR */}
+<aside className="w-80 hidden lg:flex flex-col px-5 py-5">
+
+  <div className="h-full rounded-[32px] bg-white/80 backdrop-blur-xl border border-white shadow-[0_10px_40px_rgba(15,23,42,0.08)] overflow-hidden flex flex-col">
+
+    {/* TOP */}
+    <div className="px-7 py-8 border-b border-slate-100">
+
+      <div className="flex flex-col items-center text-center">
+
+        <div className="w-28 h-28 rounded-[32px] bg-white/40 backdrop-blur-xl border border-white/60 shadow-[0_10px_30px_rgba(15,23,42,0.08)] flex items-center justify-center">
+
+          <Image
+            src="/logo.png"
+            alt="Logo"
+            width={72}
+            height={72}
+            className="object-contain"
+          />
+
+        </div>
+
+        <div className="mt-7">
+
+          <h1 className="text-[40px] leading-none font-bold tracking-tight text-slate-900">
+            Finance Panel
+          </h1>
+
+          <p className="text-slate-400 text-xl mt-4 leading-relaxed">
+            Payment
+            <br />
+            Monitoring
+          </p>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    {/* MENU */}
+    <div className="flex-1 px-5 py-6">
+
+      <button
+        className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/20"
+      >
+
+        <Wallet size={22} />
+
+        <div className="text-left">
+
+          <h3 className="font-semibold">
+            Payment Approval
+          </h3>
+
+          <p className="text-xs text-cyan-100 mt-1">
+            Finance monitoring
+          </p>
+
+        </div>
+
+      </button>
+
+    </div>
+
+    {/* BOTTOM */}
+    <div className="p-5 border-t border-slate-100 space-y-3">
+
+      {/* PASSWORD */}
+      <button
+        onClick={() =>
+          setShowPasswordModal(true)
+        }
+        className="group w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-slate-600 hover:bg-slate-100 transition-all"
+      >
+
+        <div className="w-11 h-11 rounded-2xl bg-slate-100 flex items-center justify-center">
+
+          <KeyRound size={20} />
+
+        </div>
+
+        <div className="text-left">
+
+          <h3 className="font-semibold">
+            Change Password
+          </h3>
+
+          <p className="text-xs text-slate-400 mt-1">
+            Update account security
+          </p>
+
+        </div>
+
+      </button>
+
+      {/* LOGOUT */}
+      <button
+        onClick={logout}
+        className="group w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-red-500 hover:bg-red-50 transition-all"
+      >
+
+        <div className="w-11 h-11 rounded-2xl bg-red-100 flex items-center justify-center">
+
+          <LogOut size={20} />
+
+        </div>
+
+        <div className="text-left">
+
+          <h3 className="font-semibold">
+            Logout
+          </h3>
+
+          <p className="text-xs text-red-300 mt-1">
+            Exit dashboard session
+          </p>
+
+        </div>
+
+      </button>
+
+    </div>
+
+  </div>
+
+</aside>
+{/* MAIN CONTENT */}
+<div className="flex-1 flex flex-col min-w-0">
       {/* HEADER */}
-      <header className="bg-white border-b border-slate-200 px-8 py-5 flex items-center justify-between shadow-sm">
+<header className="sticky top-0 z-10 px-8 py-6">
 
-        {/* LEFT */}
-        <div className="flex items-center gap-5">
+  <div className="rounded-[28px] bg-white/80 backdrop-blur-xl border border-white shadow-[0_10px_40px_rgba(15,23,42,0.06)] px-8 py-6 flex items-center justify-between">
 
-          <div className="w-14 h-14 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-center">
+    {/* LEFT */}
+    <div>
 
-            <Image
-              src="/logo.png"
-              alt="Logo"
-              width={40}
-              height={40}
-            />
+      <div className="flex items-center gap-3">
 
-          </div>
+        <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
 
-          <div>
-
-            <h1 className="text-2xl font-bold text-slate-900">
-              Finance Dashboard
-            </h1>
-
-            <p className="text-slate-500">
-              Medical Reimbursement System
-            </p>
-
-          </div>
+          <Wallet
+            size={22}
+            className="text-white"
+          />
 
         </div>
 
-        {/* RIGHT */}
-        <div className="flex items-center gap-4">
+        <div>
 
-          <div className="text-right">
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
+            Finance Dashboard
+          </h1>
 
-            <h2 className="font-semibold text-slate-800">
-              {user.nama}
-            </h2>
-
-            <p className="text-sm text-slate-500 capitalize">
-              {user.role}
-            </p>
-
-          </div>
-
-          {/* CHANGE PASSWORD */}
-          <button
-            onClick={() =>
-              setShowPasswordModal(
-                true
-              )
-            }
-            className="w-12 h-12 rounded-2xl bg-blue-50 hover:bg-blue-100 transition-all flex items-center justify-center text-blue-600"
-          >
-
-            <KeyRound size={20} />
-
-          </button>
-
-          {/* LOGOUT */}
-          <button
-            onClick={logout}
-            className="w-12 h-12 rounded-2xl bg-red-50 hover:bg-red-100 transition-all flex items-center justify-center text-red-500"
-          >
-
-            <LogOut size={22} />
-
-          </button>
+          <p className="text-slate-500 mt-1">
+            Manage reimbursement payment approvals
+          </p>
 
         </div>
 
-      </header>
+      </div>
+
+    </div>
+
+    {/* RIGHT */}
+    <div className="hidden md:flex items-center gap-5">
+
+      {/* DATE */}
+      <div className="text-right">
+
+        <p className="text-sm text-slate-400">
+          Today
+        </p>
+
+        <h3 className="font-semibold text-slate-800">
+
+          {
+            format(
+              new Date(),
+              'dd MMM yyyy'
+            )
+          }
+
+        </h3>
+
+      </div>
+
+      {/* DIVIDER */}
+      <div className="w-px h-12 bg-slate-200" />
+
+      {/* STATUS */}
+      <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-emerald-50 border border-emerald-100">
+
+        <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse" />
+
+        <div>
+
+          <p className="text-xs text-emerald-600">
+            System Status
+          </p>
+
+          <h3 className="font-semibold text-emerald-700">
+            Operational
+          </h3>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</header>
 
       {/* CONTENT */}
       <main className="p-8">
@@ -638,81 +799,167 @@ export default function FinanceDashboard() {
         </div>
 
         {/* CARDS */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div className="grid grid-cols-1 md:grid-cols-3 gap-7">
 
-          {/* TOTAL */}
-          <div className="bg-white rounded-3xl p-7 shadow-sm border border-slate-200">
+  {/* TOTAL */}
+  <div className="relative overflow-hidden rounded-[32px] border border-white/60 bg-white/80 backdrop-blur-xl shadow-[0_10px_40px_rgba(15,23,42,0.06)] p-8 group hover:-translate-y-1 transition-all duration-300">
 
-            <div className="w-16 h-16 rounded-2xl bg-blue-100 flex items-center justify-center mb-6">
+    {/* GLOW */}
+    <div className="absolute -top-10 -right-10 w-40 h-40 bg-blue-100 rounded-full blur-3xl opacity-50 group-hover:opacity-70 transition-all" />
 
-              <Wallet
-                className="text-blue-600"
-                size={30}
-              />
+    {/* TOP */}
+    <div className="relative z-10 flex items-start justify-between">
 
-            </div>
+      <div>
 
-            <p className="text-slate-500 text-lg">
-              Total Reimbursements
-            </p>
+        <p className="text-slate-500 text-sm font-medium tracking-wide uppercase">
+          Total Payments
+        </p>
 
-            <h3 className="text-5xl font-bold text-slate-900 mt-3">
-              {totalData}
-            </h3>
+        <h3 className="text-6xl font-bold text-slate-900 mt-4 tracking-tight">
+          {totalData}
+        </h3>
 
-          </div>
+      </div>
 
-          {/* PENDING */}
-          <div className="bg-white rounded-3xl p-7 shadow-sm border border-slate-200">
+      <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-200">
 
-            <div className="w-16 h-16 rounded-2xl bg-amber-100 flex items-center justify-center mb-6">
+        <Wallet
+          className="text-white"
+          size={30}
+        />
 
-              <Clock3
-                className="text-amber-600"
-                size={30}
-              />
+      </div>
 
-            </div>
+    </div>
 
-            <p className="text-slate-500 text-lg">
-              Pending Finance
-            </p>
+    {/* BOTTOM */}
+    <div className="relative z-10 mt-8 flex items-center justify-between">
 
-            <h3 className="text-5xl font-bold text-slate-900 mt-3">
-              {pendingFinance}
-            </h3>
+      <div className="flex items-center gap-2 text-emerald-600 text-sm font-semibold">
 
-          </div>
+        <div className="w-2 h-2 rounded-full bg-emerald-500" />
 
-          {/* COMPLETED */}
-          <div className="bg-white rounded-3xl p-7 shadow-sm border border-slate-200">
+        Payment reimbursement data
 
-            <div className="w-16 h-16 rounded-2xl bg-emerald-100 flex items-center justify-center mb-6">
+      </div>
 
-              <BadgeCheck
-                className="text-emerald-600"
-                size={30}
-              />
+      <span className="text-slate-400 text-sm">
+        Finance Overview
+      </span>
 
-            </div>
+    </div>
 
-            <p className="text-slate-500 text-lg">
-              Payment Completed
-            </p>
+  </div>
 
-            <h3 className="text-5xl font-bold text-slate-900 mt-3">
-              {completedPayment}
-            </h3>
+  {/* PENDING */}
+  <div className="relative overflow-hidden rounded-[32px] border border-white/60 bg-white/80 backdrop-blur-xl shadow-[0_10px_40px_rgba(15,23,42,0.06)] p-8 group hover:-translate-y-1 transition-all duration-300">
 
-          </div>
+    {/* GLOW */}
+    <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-amber-100 rounded-full blur-3xl opacity-50 group-hover:opacity-70 transition-all" />
 
-        </div>
+    {/* TOP */}
+    <div className="relative z-10 flex items-start justify-between">
 
+      <div>
+
+        <p className="text-slate-500 text-sm font-medium tracking-wide uppercase">
+          Pending Payment
+        </p>
+
+        <h3 className="text-6xl font-bold text-slate-900 mt-4 tracking-tight">
+          {pendingFinance}
+        </h3>
+
+      </div>
+
+      <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-amber-400 to-orange-400 flex items-center justify-center shadow-lg shadow-amber-200">
+
+        <Clock3
+          className="text-white"
+          size={30}
+        />
+
+      </div>
+
+    </div>
+
+    {/* BOTTOM */}
+    <div className="relative z-10 mt-8 flex items-center justify-between">
+
+      <div className="flex items-center gap-2 text-amber-600 text-sm font-semibold">
+
+        <div className="w-2 h-2 rounded-full bg-amber-500" />
+
+        Waiting finance approval
+
+      </div>
+
+      <span className="text-slate-400 text-sm">
+        Need review
+      </span>
+
+    </div>
+
+  </div>
+
+  {/* COMPLETED */}
+  <div className="relative overflow-hidden rounded-[32px] border border-white/60 bg-white/80 backdrop-blur-xl shadow-[0_10px_40px_rgba(15,23,42,0.06)] p-8 group hover:-translate-y-1 transition-all duration-300">
+
+    {/* GLOW */}
+    <div className="absolute -top-10 left-10 w-40 h-40 bg-emerald-100 rounded-full blur-3xl opacity-50 group-hover:opacity-70 transition-all" />
+
+    {/* TOP */}
+    <div className="relative z-10 flex items-start justify-between">
+
+      <div>
+
+        <p className="text-slate-500 text-sm font-medium tracking-wide uppercase">
+          Payment Completed
+        </p>
+
+        <h3 className="text-6xl font-bold text-slate-900 mt-4 tracking-tight">
+          {completedPayment}
+        </h3>
+
+      </div>
+
+      <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-200">
+
+        <BadgeCheck
+          className="text-white"
+          size={30}
+        />
+
+      </div>
+
+    </div>
+
+    {/* BOTTOM */}
+    <div className="relative z-10 mt-8 flex items-center justify-between">
+
+      <div className="flex items-center gap-2 text-emerald-600 text-sm font-semibold">
+
+        <div className="w-2 h-2 rounded-full bg-emerald-500" />
+
+        Successfully completed
+
+      </div>
+
+      <span className="text-slate-400 text-sm">
+        Finance Process
+      </span>
+
+    </div>
+
+  </div>
+
+</div>
         {/* FILTER */}
         <div className="mt-8 flex flex-col lg:flex-row gap-4">
 
           {/* SEARCH */}
-          <div className="flex items-center gap-3 bg-white border border-slate-200 rounded-2xl px-5 py-4 shadow-sm flex-1">
+          <div className="flex items-center gap-3 bg-white/70 backdrop-blur-xl border border-white/60 rounded-2xl px-5 py-4 shadow-sm flex-1">
 
             <Search
               size={20}
@@ -735,14 +982,14 @@ export default function FinanceDashboard() {
 
           {/* STATUS */}
           <select
-            value={statusFilter}
-            onChange={(e) =>
-              setStatusFilter(
-                e.target.value
-              )
-            }
-            className="bg-white border border-slate-200 rounded-2xl px-5 py-4 shadow-sm text-slate-700"
-          >
+  value={statusFilter}
+  onChange={(e) =>
+    setStatusFilter(
+      e.target.value
+    )
+  }
+  className={premiumSelect}
+>
 
             <option value="all">
               All Status
@@ -760,14 +1007,26 @@ export default function FinanceDashboard() {
 
           {/* MONTH */}
           <select
-            value={monthFilter}
-            onChange={(e) =>
-              setMonthFilter(
-                e.target.value
-              )
-            }
-            className="bg-white border border-slate-200 rounded-2xl px-5 py-4 shadow-sm text-slate-700"
-          >
+  value={statusFilter}
+  onChange={(e) =>
+    setStatusFilter(
+      e.target.value
+    )
+  }
+  className="
+    relative z-20
+    bg-white/80 backdrop-blur-xl
+    border border-white/60
+    rounded-2xl
+    px-5 py-4
+    shadow-sm
+    text-slate-700
+    outline-none
+    focus:ring-2
+    focus:ring-cyan-500
+    transition-all
+  "
+>
 
             <option value="all">
               All Month
@@ -826,10 +1085,10 @@ export default function FinanceDashboard() {
         </div>
 
         {/* TABLE */}
-        <div className="mt-10 bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="mt-10 bg-white/80 backdrop-blur-xl rounded-[32px] border border-white/60 shadow-[0_10px_40px_rgba(15,23,42,0.08)] overflow-hidden">
 
           {/* HEADER */}
-          <div className="px-8 py-6 border-b border-slate-200">
+          <div className="px-8 py-7 border-b border-slate-100 flex items-center justify-between">
 
             <h2 className="text-2xl font-bold text-slate-900">
               Finance Approval Requests
@@ -1171,6 +1430,8 @@ export default function FinanceDashboard() {
         )
       }
 
-    </div>
-  )
+       </div>
+
+  </div>
+)
 }

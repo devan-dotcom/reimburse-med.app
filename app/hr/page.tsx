@@ -320,7 +320,15 @@ export default function HRDashboard() {
   <div className="flex flex-col items-center text-center">
 
     {/* LOGO */}
-    <div className="w-28 h-28 rounded-[32px] bg-gradient-to-br from-cyan-500 to-blue-600 shadow-[0_15px_40px_rgba(6,182,212,0.35)] flex items-center justify-center">
+    <div className="
+  w-28 h-28
+  rounded-[32px]
+  bg-white/40
+  backdrop-blur-2xl
+  border border-white/60
+  shadow-[0_10px_30px_rgba(15,23,42,0.08)]
+  flex items-center justify-center
+">
 
       <Image
         src="/logo.png"
